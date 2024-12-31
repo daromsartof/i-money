@@ -1,0 +1,46 @@
+version: '3.8'
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: imoney-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: imoney
+      MYSQL_USER: imoney
+      MYSQL_PASSWORD: imoneypass
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: imoney-backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URL=mysql://imoney:imoneypass@mysql:3306/imoney
+      - NODE_ENV=development
+      - PORT=5000
+    depends_on:
+      - mysql
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: imoney-frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_API_URL=http://localhost:5000
+    depends_on:
+      - backend
+
+volumes:
+  mysql-data:
